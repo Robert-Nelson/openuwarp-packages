@@ -21,7 +21,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/base-files-uwarp-generic
   SECTION:=base
   CATEGORY:=Base system
-  DEPENDS:=
+  DEPENDS:=+base-files
   TITLE:=Base files for the uWARP board
   VERSION:=$(PKG_RELEASE)-$(REVISION)
 endef
@@ -42,6 +42,8 @@ Build/Compile = $(Build/Compile/Default)
 
 define Package/base-files-uwarp-generic/install
 	$(CP) ./files/* $(1)/
+	$(VERSION_SED) \
+		$(1)/etc/banner
 endef
 
 $(eval $(call BuildPackage,base-files-uwarp-generic))
