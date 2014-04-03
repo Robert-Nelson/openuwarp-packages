@@ -1,0 +1,22 @@
+KERNEL!="sd[a-z]*", GOTO="mnt_auto_mount_end"
+
+# Import FS infos
+ACTION=="add", IMPORT{program}="/usr/sbin/blkid -o udev -p %N"
+
+# Global mount options
+ACTION=="add", ENV{mount_options}="relatime,umask=0,uid=1000,gid=1000"
+
+# Filesystem specific options
+ACTION=="add", ENV{ID_FS_TYPE}=="vfat", ENV{mount_options}="%E{mount_options},showexec"
+ACTION=="add", ENV{ID_FS_TYPE}=="ntfs", ENV{mount_options}="%E{mount_options},utf8"
+
+ACTION=="add", ENV{dir_name}!="?*", ENV{dir_name}="usbhd-%k"
+
+# Mount under /mnt 
+ACTION=="add", ENV{dir_name}=="?*", RUN+="/bin/mkdir -p /mnt/%E{dir_name}", RUN+="/bin/mount -o %E{mount_options} /dev/%k /mnt/%E{dir_name}", RUN+="/bin/usbmount.sh %k"
+
+# Clean up after removal
+ACTION=="remove", ENV{dir_name}=="?*", RUN+="/bin/umount -l /mnt/%E{dir_name}", RUN+="/bin/rmdir /mnt/%E{dir_name}", RUN+="/bin/usbremove.sh %k"
+
+# Exit
+LABEL="mnt_auto_mount_end"
