@@ -1,0 +1,18 @@
+#!/bin/sh /etc/rc.common
+#
+# Copyright (C) 2014 PIKA Technologies Inc.
+#
+
+START=99
+
+start() {
+	# touch overlay ready file
+	touch /tmp/.file-systems-mounted
+	#reset boot count
+	/usr/sbin/fw_setenv bootcount 0
+	if [ $? -eq 0 ]; then
+		logger -s -t RESETBOOTCNT "Reset bootcount to 0"
+	else
+		logger -s -t RESETBOOTCNT "FAILED ::: Reset bootcount to 0"
+	fi
+}
