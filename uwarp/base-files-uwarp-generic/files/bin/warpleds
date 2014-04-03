@@ -1,0 +1,198 @@
+#!/bin/sh
+# A script to control status leds on uWARP
+
+USAGE="\n
+Control the status LEDS on the uWARP.\n
+\n
+\n
+Usage: warpleds option\n
+\n
+\n
+option:\n
+\tgreen  -  Turn the green leds on, red leds off.\n
+\tgreen0 -  Turn the green leds on for one 1 side.\n
+\tgreen1 -  Turn the green leds on for other side.\n
+\tred    -  Turn the red leds on, green leds off.\n
+\tred0   -  Turn the red leds on for one 1 side.\n
+\tred1   -  Turn the red leds on for other side.\n
+\toff    -  Turn the green and red leds off.\n
+\tboth   -  Turn the green leds and red leds on.\n
+\n
+"
+green_on() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led0/brightness ]; then
+		echo 1 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led0/brightness
+	fi
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led1/brightness ]; then
+		echo 1 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led1/brightness
+	fi
+}
+
+green0_on() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led0/brightness ]; then
+		echo 1 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led0/brightness
+	fi
+}
+
+green1_on() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led1/brightness ]; then
+		echo 1 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led1/brightness
+	fi
+}
+
+red_on() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led0/brightness ]; then
+		echo 1 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led0/brightness
+	fi
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led1/brightness ]; then
+		echo 1 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led1/brightness
+	fi
+}
+
+red0_on() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led0/brightness ]; then
+		echo 1 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led0/brightness
+	fi
+}
+
+red1_on() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led1/brightness ]; then
+		echo 1 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led1/brightness
+	fi
+}
+
+green_off() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led0/brightness ]; then
+		echo 0 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led0/brightness
+	fi
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led1/brightness ]; then
+		echo 0 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led1/brightness
+	fi
+}
+
+green0_off() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led0/brightness ]; then
+		echo 0 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led0/brightness
+	fi
+}
+
+green1_off() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led1/brightness ]; then
+		echo 0 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:green:led1/brightness
+	fi
+}
+
+red_off() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led0/brightness ]; then
+		echo 0 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led0/brightness
+	fi
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led1/brightness ]; then
+		echo 0 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led1/brightness
+	fi
+}
+
+red0_off() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led0/brightness ]; then
+		echo 0 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led0/brightness
+	fi
+}
+
+red1_off() {
+	if [ -f /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led1/brightness ]; then
+		echo 0 > /sys/devices/platform/leds-gpio/leds/uwarp-ar7420:red:led1/brightness
+	fi
+}
+
+# Flash the red and green LED the number of times passed to function.
+# NOTE: Each loop takes 1 seconds
+flash_cycle() {
+	END=10
+	# reset number of loops if requested
+	if [ $1 != "" ]; then
+		END=$1
+	fi
+	# loop required number of times
+	COUNT=1
+	while [[ $COUNT -le $END ]]; do
+		red1_on
+		green1_off
+		red0_off
+		green0_on
+		/bin/usleep 500000
+		red0_on
+		green0_off
+		red1_off
+		green1_on
+		/bin/usleep 500000
+		COUNT=`expr $COUNT +  1`
+	done
+	green
+}
+
+if [ $# -lt 1 ]; then
+	echo -e $USAGE
+	exit 0
+fi
+
+case "$1" in
+
+	green)
+		green_on
+		red_off
+		exit 0
+		;;
+
+	green0)
+		green0_on
+		red0_off
+		exit 0
+		;;
+
+	green1)
+		green1_on
+		red1_off
+		exit 0
+		;;
+
+	red)
+		red_on
+		green_off
+		exit 0
+		;;
+
+	red0)
+		red0_on
+		green0_off
+		exit 0
+		;;
+
+	red1)
+		red1_on
+		green1_off
+		exit 0
+		;;
+
+	both)
+		green_on
+		red_on
+		exit 0
+		;;
+
+	flash)
+		flash_cycle $2
+		exit 0
+		;;
+
+	off)
+		green_off
+		red_off
+		exit 0
+		;;
+
+	--help|-h|*)
+		echo -e $USAGE
+		;;
+	
+esac
+
+exit 0
