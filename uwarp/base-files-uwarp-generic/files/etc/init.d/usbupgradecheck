@@ -1,0 +1,72 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2013 PIKA Technologies Inc.
+# Restore directories if USB key has been removed
+
+START=98
+RUN_ONCE_FILE=/tmp/usbupgradecheck.test
+PIKAUPBX_UPGRADE_BACKUP_FILE=""
+USB_MOUNT_DIR=""
+USB_DEV=""
+
+start() {
+	# make sure we only run once
+	if [ -f $RUN_ONCE_FILE ]; then
+		logger -s -t USBUPGRADECHECK -p 1 "Already run once, exit."
+		return 0
+	else
+		logger -s -t USBUPGRADECHECK -p 1 "Running USB check ..."
+		touch $RUN_ONCE_FILE
+	fi
+
+	# if USB key present, look for backup to restore
+	if [ ! -e /dev/sda1 ] && [ ! -e /dev/sda ]; then
+		sleep 5
+		if [ ! -e /dev/sda1 ] && [ ! -e /dev/sda ]; then
+			logger -s -t USBUPGRADECHECK -p 1 "NO USB key is present"
+			return 0
+		fi
+	fi
+	
+	if [ -d /mnt/usbhd-sda1 ]; then
+		mount | grep -q "sda1"
+		if [ $? -eq 0 ]; then
+			USB_DEV="sda1"
+			USB_MOUNT_DIR="/mnt/usbhd-sda1"
+		elif [ -e /dev/sda1 ]; then
+			mount /dev/sda1 /mnt/usbhd-sda1
+			if [ $? -eq 0 ]; then
+				USB_DEV="sda1"
+				USB_MOUNT_DIR="/mnt/usbhd-sda1"
+			else
+				mount | grep -q "sda1"
+				if [ $? -ne 0 ]; then
+					rm -rf /mnt/usbhd-sda1
+				fi
+			fi
+		fi
+	elif [ -d /mnt/usbhd-sda ]; then
+		mount | grep -q "sda "
+		if [ $? -eq 0 ]; then
+			USB_DEV="sda"
+			USB_MOUNT_DIR="/mnt/usbhd-sda"
+		elif [ -e /dev/sda ]; then
+			mount /dev/sda /mnt/usbhd-sda
+			if [ $? -eq 0 ]; then
+				USB_DEV="sda"
+				USB_MOUNT_DIR="/mnt/usbhd-sda"
+			else
+				mount | grep -q "sda"
+				if [ $? -ne 0 ]; then
+					rm -rf /mnt/usbhd-sda
+				fi
+			fi
+		fi
+	fi
+	
+	# call the usbupgrade function
+	if [ "$USB_DEV" != "" ]; then
+		/bin/usbupgrade.sh $USB_DEV
+	fi
+
+	return 0
+}
