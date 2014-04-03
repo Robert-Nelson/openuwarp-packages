@@ -94,10 +94,14 @@ set_exit_leds() {
 
 # This function checks for the system upgrade file of format,
 # openwrt-ar71xx-generic-uwarp-ar7420-squashfs-*.bin, on the USB. There can only
-# be one on the key. Function returns 0 if file is found, 1 if
-# no file is found or 2 if more than one file is found.
+# be one on the key. Function returns 0 if file is found, 1 if no file is
+# found, 2 if more than one file is found or 3 if already burnt file exists.
 # The function also sets the value for UPGRADE_FILENAME
 check_for_upgrade_file () {
+	# see if file burnt already
+	if [ -f $OPENUWARP_BURN_TEST_FILE ]; then
+		return 3
+	fi
 	UPGRADE_FILENAME=""
 	COUNT=`/bin/ls -l $USB_MOUNT_DIR/openwrt-ar71xx-generic-uwarp-ar7420-squashfs-*.bin | egrep "factory|sysupgrade" | grep -c ".bin"`
 	if [ $COUNT -eq 0 ]; then
@@ -146,6 +150,10 @@ verify_upgrade_file () {
 do_upgrade () {
 	cd $USB_MOUNT_DIR
 	if [ -f $UPGRADE_FILENAME ]; then
+		# mark that we are burning file
+		echo "Attempted burn at:" > $OPENUWARP_BURN_TEST_FILE
+		date >> $OPENUWARP_BURN_TEST_FILE
+		sync
 		# start upgrade process
 		/bin/echo "NOTICE: Stopping processes ..."  >> $OPENUWARP_UPGRADE_LOG
 		kill_processes
@@ -197,7 +205,9 @@ if [ $? -eq 0 ]; then
 	OPENUWARP_LOG_DIR="$USB_MOUNT_DIR/uwarp"
 	mkdir -p $OPENUWARP_LOG_DIR
 	OPENUWARP_INFO_LOG="$OPENUWARP_LOG_DIR/uwarp-info.txt"
-	OPENUWARP_UPGRADE_LOG="$USB_MOUNT_DIR/uwarp-upgrade.log"
+	OPENUWARP_UPGRADE_LOG="$OPENUWARP_LOG_DIR/uwarp-upgrade.log"
+	OPENUWARP_BURN_TEST_FILENAME="uwarp-image.burnt"
+	OPENUWARP_BURN_TEST_FILE="$USB_MOUNT_DIR/$OPENUWARP_BURN_TEST_FILENAME"
 else
 	/usr/bin/logger -s -t USBMOUNT -p 1 "Device, /dev/$1, was not mounted. Remove it's directory!!"
 	if [ -d /mnt/usbhd-$1 ]; then
@@ -237,6 +247,8 @@ elif [ $FILECHECK -eq 2 ]; then
 	echo "NOTICE: There is an invalid upgrade file found." >> $OPENUWARP_UPGRADE_LOG
 	set_exit_leds
 	exit 1
+elif [ $FILECHECK -eq 3 ]; then
+	/bin/echo "NOTICE: the firmware file has already burnt. Remove the \"$OPENUWARP_BURN_TEST_FILENAME\" file on your USB key if you want to burn again." >> $OPENUWARP_UPGRADE_LOG
 else
 	echo "NOTICE: No upgrade file found." >> $OPENUWARP_UPGRADE_LOG
 fi

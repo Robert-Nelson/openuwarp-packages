@@ -22,13 +22,14 @@ define Package/base-files-uwarp-generic
   SECTION:=base
   CATEGORY:=Base system
   DEPENDS:=+base-files
-  TITLE:=Base files for the uWARP board
+  TITLE:=Base files for the Generic uWARP board
   VERSION:=$(PKG_RELEASE)-$(REVISION)
 endef
 
 
 define Package/base-files-uwarp-generic/description
- This package contains a base filesystem and system scripts for OpenWrt.
+ This package contains a base filesystem and system scripts for OpenWrt
+ that support the Open uWARP board.
 endef
 
 define Build/Prepare
