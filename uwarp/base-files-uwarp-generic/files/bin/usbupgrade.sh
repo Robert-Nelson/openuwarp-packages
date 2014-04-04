@@ -225,6 +225,18 @@ date >> $OPENUWARP_UPGRADE_LOG
 echo "==============================" >> $OPENUWARP_UPGRADE_LOG
 echo "" >> $OPENUWARP_UPGRADE_LOG
 
+# check if factory reset file is present
+if [ -f $USB_MOUNT_DIR/uwarp.reset ]; then
+	echo "Performing a factory reset as requested." >> $PIKAUPBX_UPGRADE_LOG
+	rm -rf /overlay/*
+	rm -f $USB_MOUNT_DIR/uwarp.reset
+	echo "Factory reset done, rebooting." >> $PIKAUPBX_UPGRADE_LOG
+	sync
+	umount $USB_MOUNT_DIR
+	reboot
+	exit 0
+fi
+
 # check if there is an update file, run it if found
 check_for_upgrade_file
 FILECHECK=$?
